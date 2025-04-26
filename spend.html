@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spend Mukesh Ambani's Money</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .money-header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: white;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .money-left {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2ecc71;
+            text-align: center;
+            padding: 20px 0;
+        }
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: #f0f0f0;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #2ecc71;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .items-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 120px 20px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .item-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .item-image {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        .item-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        .item-price {
+            color: #2ecc71;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .item-controls {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            justify-content: space-between;
+        }
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .buy-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .sell-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .quantity {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .total-spent {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="money-header">
+        <div class="money-left" id="money-left">₹8,300,000,000,000</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="items-container" id="items-container"></div>
+
+    <div class="total-spent" id="total-spent">
+        Total Spent: ₹0
+    </div>
+
+    <script>
+        // Initialize the money amount (Converted from $100 billion to ₹)
+        const initialMoney = 8300000000000; // ₹8.3 trillion (approx $100B USD at 83 INR to 1 USD)
+        let moneyLeft = initialMoney;
+        let totalSpent = 0;
+
+        // Format number to currency string with commas
+        function formatMoney(amount) {
+            return '₹' + amount.toLocaleString('en-IN');
+        }
+
+        // Update the displayed money amount
+        function updateMoneyDisplay() {
+            document.getElementById('money-left').textContent = formatMoney(moneyLeft);
+            document.getElementById('total-spent').textContent = 'Total Spent: ' + formatMoney(totalSpent);
+            
+            // Update progress bar
+            const progressPercentage = (totalSpent / initialMoney) * 100;
+            document.getElementById('progress-bar').style.width = progressPercentage + '%';
+        }
+
+        // Items data (prices converted to INR with 83x multiplier)
+        const items = [
+            { id: 1, name: "Big Mac", price: 166, image: "https://neal.fun/spend/images/big-mac.jpg", quantity: 0 },
+            { id: 2, name: "Flip Flops", price: 249, image: "https://neal.fun/spend/images/flip-flops.jpg", quantity: 0 },
+            { id: 3, name: "Coca-Cola Pack", price: 415, image: "https://neal.fun/spend/images/coca-cola-pack.jpg", quantity: 0 },
+            { id: 4, name: "Movie Ticket", price: 996, image: "https://neal.fun/spend/images/movie-ticket.jpg", quantity: 0 },
+            { id: 5, name: "Book", price: 1245, image: "https://neal.fun/spend/images/book.jpg", quantity: 0 },
+            { id: 6, name: "Lobster Dinner", price: 3735, image: "https://neal.fun/spend/images/lobster-dinner.jpg", quantity: 0 },
+            { id: 7, name: "Video Game", price: 4980, image: "https://neal.fun/spend/images/video-game.jpg", quantity: 0 },
+            { id: 8, name: "Amazon Echo", price: 8217, image: "https://neal.fun/spend/images/amazon-echo.jpg", quantity: 0 },
+            { id: 9, name: "Year of Netflix", price: 8300, image: "https://neal.fun/spend/images/year-of-netflix.jpg", quantity: 0 },
+            { id: 10, name: "Air Jordans", price: 10375, image: "https://neal.fun/spend/images/air-jordans.jpg", quantity: 0 },
+            { id: 11, name: "Airpods", price: 16517, image: "https://neal.fun/spend/images/airpods.jpg", quantity: 0 },
+            { id: 12, name: "Gaming Console", price: 24817, image: "https://neal.fun/spend/images/gaming-console.jpg", quantity: 0 },
+            { id: 13, name: "Drone", price: 29050, image: "https://neal.fun/spend/images/drone.jpg", quantity: 0 },
+            { id: 14, name: "Smartphone", price: 58017, image: "https://neal.fun/spend/images/smartphone.jpg", quantity: 0 },
+            { id: 15, name: "Bike", price: 66400, image: "https://neal.fun/spend/images/bike.jpg", quantity: 0 },
+            { id: 16, name: "Kitten", price: 124500, image: "https://neal.fun/spend/images/kitten.jpg", quantity: 0 },
+            { id: 17, name: "Puppy", price: 124500, image: "https://neal.fun/spend/images/puppy.jpg", quantity: 0 },
+            { id: 18, name: "Auto Rickshaw", price: 190900, image: "https://neal.fun/spend/images/auto-rickshaw.jpg", quantity: 0 },
+            { id: 19, name: "Horse", price: 207500, image: "https://neal.fun/spend/images/horse.jpg", quantity: 0 },
+            { id: 20, name: "Acre of Farmland", price: 249000, image: "https://neal.fun/spend/images/acre-of-farmland.jpg", quantity: 0 },
+            { id: 21, name: "Designer Handbag", price: 456500, image: "https://neal.fun/spend/images/designer-handbag.jpg", quantity: 0 },
+            { id: 22, name: "Hot Tub", price: 498000, image: "https://neal.fun/spend/images/hot-tub.jpg", quantity: 0 },
+            { id: 23, name: "Luxury Wine", price: 581000, image: "https://neal.fun/spend/images/luxury-wine.jpg", quantity: 0 },
+            { id: 24, name: "Diamond Ring", price: 830000, image: "https://neal.fun/spend/images/diamond-ring.jpg", quantity: 0 },
+            { id: 25, name: "Jet Ski", price: 996000, image: "https://neal.fun/spend/images/jet-ski.jpg", quantity: 0 },
+            { id: 26, name: "Rolex", price: 1245000, image: "https://neal.fun/spend/images/rolex.jpg", quantity: 0 },
+            { id: 27, name: "Ford F-150", price: 2490000, image: "https://neal.fun/spend/images/ford-f-150.jpg", quantity: 0 },
+            { id: 28, name: "Tesla", price: 6225000, image: "https://neal.fun/spend/images/tesla.jpg", quantity: 0 },
+            { id: 29, name: "Monster Truck", price: 12450000, image: "https://neal.fun/spend/images/monster-truck.jpg", quantity: 0 },
+            { id: 30, name: "Ferrari", price: 20750000, image: "https://neal.fun/spend/images/ferrari.jpg", quantity: 0 },
+            { id: 31, name: "Single Family Home", price: 24900000, image: "https://neal.fun/spend/images/single-family-home.jpg", quantity: 0 },
+            { id: 32, name: "Gold Bar", price: 58100000, image: "https://neal.fun/spend/images/gold-bar.jpg", quantity: 0 },
+            { id: 33, name: "McDonalds Franchise", price: 124500000, image: "https://neal.fun/spend/images/mcdonalds-franchise.jpg", quantity: 0 },
+            { id: 34, name: "Superbowl Ad", price: 435750000, image: "https://neal.fun/spend/images/superbowl-ad.jpg", quantity: 0 },
+            { id: 35, name: "Yacht", price: 622500000, image: "https://neal.fun/spend/images/yacht.jpg", quantity: 0 },
+            { id: 36, name: "M1 Abrams", price: 664000000, image: "https://neal.fun/spend/images/m1-abrams.jpg", quantity: 0 },
+            { id: 37, name: "Formula 1 Car", price: 1245000000, image: "https://neal.fun/spend/images/formula-1-car.jpg", quantity: 0 },
+            { id: 38, name: "Apache Helicopter", price: 2573000000, image: "https://neal.fun/spend/images/apache-helicopter.jpg", quantity: 0 },
+            { id: 39, name: "Mansion", price: 3735000000, image: "https://neal.fun/spend/images/mansion.jpg", quantity: 0 },
+            { id: 40, name: "Make a Movie", price: 8300000000, image: "https://neal.fun/spend/images/make-a-movie.jpg", quantity: 0 },
+            { id: 41, name: "Boeing 747", price: 12284000000, image: "https://neal.fun/spend/images/boeing-747.jpg", quantity: 0 },
+            { id: 42, name: "Mona Lisa", price: 64740000000, image: "https://neal.fun/spend/images/mona-lisa.jpg", quantity: 0 },
+            { id: 43, name: "Skyscraper", price: 70550000000, image: "https://neal.fun/spend/images/skyscraper.jpg", quantity: 0 },
+            { id: 44, name: "Cruise Ship", price: 77190000000, image: "https://neal.fun/spend/images/cruise-ship.jpg", quantity: 0 },
+            { id: 45, name: "NBA Team", price: 175960000000, image: "https://neal.fun/spend/images/nba-team.jpg", quantity: 0 }
+        ];
+
+        // Buy an item
+        function buyItem(itemId) {
+            const item = items.find(i => i.id === itemId);
+            if (moneyLeft >= item.price) {
+                item.quantity++;
+                moneyLeft -= item.price;
+                totalSpent += item.price;
+                updateItemDisplay(item);
+                updateMoneyDisplay();
+            }
+        }
+
+        // Sell an item
+        function sellItem(itemId) {
+            const item = items.find(i => i.id === itemId);
+            if (item.quantity > 0) {
+                item.quantity--;
+                moneyLeft += item.price;
+                totalSpent -= item.price;
+                updateItemDisplay(item);
+                updateMoneyDisplay();
+            }
+        }
+
+        // Update the display of a specific item
+        function updateItemDisplay(item) {
+            const quantityElement = document.getElementById(`quantity-${item.id}`);
+            const sellButton = document.getElementById(`sell-btn-${item.id}`);
+            const buyButton = document.getElementById(`buy-btn-${item.id}`);
+            
+            quantityElement.textContent = item.quantity;
+            
+            // Disable/enable sell button based on quantity
+            if (item.quantity === 0) {
+                sellButton.classList.add('disabled');
+            } else {
+                sellButton.classList.remove('disabled');
+            }
+            
+            // Disable/enable buy button based on price vs. money left
+            if (moneyLeft < item.price) {
+                buyButton.classList.add('disabled');
+            } else {
+                buyButton.classList.remove('disabled');
+            }
+        }
+
+        // Create and render all item cards
+        function renderItems() {
+            const container = document.getElementById('items-container');
+            container.innerHTML = '';
+            
+            items.forEach(item => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'item-card';
+                
+                itemCard.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="item-image">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">${formatMoney(item.price)}</div>
+                    <div class="item-controls">
+                        <button id="sell-btn-${item.id}" class="control-btn sell-btn disabled" onclick="sellItem(${item.id})">-</button>
+                        <div id="quantity-${item.id}" class="quantity">${item.quantity}</div>
+                        <button id="buy-btn-${item.id}" class="control-btn buy-btn" onclick="buyItem(${item.id})">+</button>
+                    </div>
+                `;
+                
+                container.appendChild(itemCard);
+            });
+        }
+
+        // Initial rendering
+        window.onload = function() {
+            renderItems();
+            updateMoneyDisplay();
+            
+            // Replace header image with Mukesh Ambani
+            const headerDiv = document.querySelector('.money-header');
+            const ambaniBanner = document.createElement('div');
+            ambaniBanner.style.textAlign = 'center';
+            ambaniBanner.style.padding = '10px 0';
+            ambaniBanner.style.backgroundColor = '#f8f9fa';
+            ambaniBanner.innerHTML = `
+                <h1 style="font-size: 1.8rem; margin-bottom: 10px;">Spend Mukesh Ambani's Money</h1>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/69/Mukesh_Ambani.jpg" alt="Mukesh Ambani" 
+                     style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+            `;
+            headerDiv.insertBefore(ambaniBanner, headerDiv.firstChild);
+        };
+    </script>
+</body>
+</html>
